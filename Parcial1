@@ -1,0 +1,228 @@
+import os
+import requests
+from bs4 import BeautifulSoup
+
+#Inicio de Shinigamis.
+class Shinigami:
+    URL_BASE = "https://bleach.fandom.com/es/wiki/" #Página de Bleach del inicio.
+    URL_ARMAS = "https://bleach.fandom.com/es/wiki/Lista_de_Armas" #Página de personajes Shinigamis con sus güevonadas.
+
+    def _init_(self):  
+        self.personajes_Shinigami = self.scrap_shinigami()
+
+    @staticmethod
+    def scrap_shinigami():
+        respuesta = requests.get(Shinigami.URL_ARMAS)
+        if respuesta.status_code != 200:
+            raise ValueError("No se pudo obtener información de la página.")
+        
+        soup = BeautifulSoup(respuesta.text, "html.parser")
+        h3 = soup.find('span', {'id':'Zanpaku-t.C5.8D_de_Shinigamis_y_Visored'})
+        tabla = h3.find_next('table')
+
+        shinigamis = []
+        for fila in tabla.find_all('tr')[2:]:
+            columnas = fila.find_all('td')
+            if len(columnas) >= 3:
+                nombre = columnas[1].text.strip()
+                zanpakuto = columnas[0].text.strip()
+                bankai = columnas[2].text.strip()
+                shinigamis.append((nombre, zanpakuto, bankai))
+                
+        print("Nombre de los Shinigamis, Zanpakuto y Bankai: ")
+        for shinigami in shinigamis:
+            print(f"{shinigamis.index(shinigami) + 1}. {shinigami[0]}")
+            print(f"Zanpakuto: {shinigami[1]}")
+            print(f"Bankai: {shinigami[2]}")
+            print("")
+
+        numero_shinigami = int(Shinigami.digitar_shinigami()) - 1
+        shinigami_seleccionado = shinigamis[numero_shinigami]
+        print(shinigami_seleccionado)
+
+        url_shinigami = Shinigami.URL_BASE + shinigami_seleccionado[0].replace(" ", "_")
+        print(url_shinigami)
+
+        respuesta = requests.get(url_shinigami)
+        if respuesta.status_code != 200:
+            raise ValueError("No se pudo obtener información de la página.")
+        soup = BeautifulSoup(respuesta.text, "html.parser")
+
+        sumario = soup.find('div', {'id': 'toc'})
+        descripcion_shinigami = sumario.find_previous('p').text.strip()
+        print(descripcion_shinigami)
+        
+        return shinigamis
+
+    @staticmethod
+    def digitar_shinigami():
+        while True:
+            opcion = input("Por favor, ingrese el número del Shinigami que desee. \nPuede cancelar la creación del Shinigami con la opción '60'...")
+            if opcion.isdigit():
+                opcion = int(opcion)
+                if opcion in range(1, 60):  
+                    return opcion
+            print("\nOpción no válida. Por favor, digite un número de opción válida del menú.")
+
+#Inicio de Hollows
+class Hollow:
+    URL_BASE = "https://bleach.fandom.com/es/wiki/" #Otra vez página de Bleach inicio.
+    URL_HOLLOWS = "https://bleach.fandom.com/es/wiki/Menos_Grande" #Página de Huecos con descripciones.
+
+    def _init_(self):  
+        self.personajes_Hollow = self.scrap_hollow()
+
+    @staticmethod
+    def imprimir_menu_hollow():
+        print("Lista de Hollows disponibles: ")
+        print("1. Menos Grande\n2. Adjucha\n3. Vasto Lorde\n4. Arrancar")
+
+    @staticmethod
+    def scrap_hollow(tipo_hollow):
+        if tipo_hollow == 1:
+            seccion = "Menos_Grande"
+            url_hollow = Hollow.URL_BASE + seccion
+            respuesta = requests.get(url_hollow)
+            if respuesta.status_code != 200:
+                raise ValueError("No se pudo obtener información de la página")
+            
+            soup = BeautifulSoup(respuesta.text, "html.parser")
+            icon_container = soup.find('div', {'class': 'icon-container view-image'})
+            descripcion_hollow = icon_container.find_next('span', {'id':'Menos_Grande'}).find_next('p').text.strip()
+
+            return descripcion_hollow
+        elif tipo_hollow == 2:
+            seccion = "Adjucha"
+            url_hollow = Hollow.URL_BASE + seccion
+            respuesta = requests.get(url_hollow)
+            if respuesta.status_code != 200:
+                raise ValueError("No se pudo obtener información de la página")
+            
+            soup = BeautifulSoup(respuesta.text, "html.parser")
+            descripcion_hollow = soup.find('p').text.strip()
+#Menos_Grande">Menos Grande<
+            return descripcion_hollow
+        elif tipo_hollow == 3:
+            seccion = "Vasto_Lorde"
+            url_hollow = Hollow.URL_BASE + seccion
+            respuesta = requests.get(url_hollow)
+            if respuesta.status_code != 200:
+                raise ValueError("No se pudo obtener información de la página")
+            
+            soup = BeautifulSoup(respuesta.text, "html.parser")
+            descripcion_hollow = soup.find('span', {'id':'Menos_Grande'}).find_next('p').text.strip()
+
+            return descripcion_hollow
+        elif tipo_hollow == 4:
+            seccion = "Arrancar"
+            url_hollow = Hollow.URL_BASE + seccion
+            respuesta = requests.get(url_hollow)
+            if respuesta.status_code != 200:
+                raise ValueError("No se pudo obtener información de la página")
+            
+            soup = BeautifulSoup(respuesta.text, "html.parser")
+            descripcion_hollow = soup.find('span', {'id':'Menos_Grande'}).find_next('p').text.strip()
+
+            return descripcion_hollow
+        else:
+            print("Opción de Hollow no válida.")
+            return None  # Devolvemos None si la opción no es válida
+
+    @staticmethod
+    def crear_hollow():
+        while True:
+            Hollow.imprimir_menu_hollow()
+            tipo_hollow = int(input("Ingrese el número del tipo de Hollow que desea crear: "))
+            if tipo_hollow in range(1, 5):
+                descripcion_hollow = Hollow.scrap_hollow(tipo_hollow)
+                if descripcion_hollow:
+                    print("\nDescripción del Hollow:")
+                    print(descripcion_hollow)
+                    return  # Salimos de la función después de mostrar la descripción
+            else:
+                print("Opción de Hollow no válida.")
+
+
+
+class Menu:
+    @staticmethod
+    def imprimir_menu():   
+        print("Menú Principal:")
+        print("1. Crear personaje")
+        print("2. Ver personajes creados")
+        print("3. Ver detalles de un personaje")
+        print("4. Duelo de personajes")
+        print("5. Salir")
+
+    @staticmethod
+    def imprimir_menu_creacion_personaje():
+        print("\nMenú de Creación de Personajes:")
+        print("1. Shinigami")
+        print("2. Hollow")
+        print("3. Quincy")
+        print("4. Visored (Shinigami con poderes de Hollow)")
+        print("5. Volver al menú principal")
+
+    @staticmethod
+    def digitar_opcion():
+        while True:
+            opcion = input("Por favor, digite la opción del menú que deseas realizar: ")
+            if opcion.isdigit():
+                opcion = int(opcion)
+                if opcion in range(1, 6):  
+                    return opcion
+            print("\nOpción no válida. Por favor, digite un número de opción válida del menú.")
+
+    @staticmethod
+    def limpiar_pantalla():
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+    @staticmethod
+    def crear_personaje():
+        while True:
+            Menu.imprimir_menu_creacion_personaje()
+            opcion = Menu.digitar_opcion()
+
+            if opcion == 1:
+                print("Creando un Shinigami...")
+                Shinigami()
+                #lógica Shinigami
+                return  # Regresamos al menú principal después de crear un personaje
+            elif opcion == 2:
+                print("Creando un Hollow...")
+                Hollow.crear_hollow()
+                #lógica Hollow
+            elif opcion == 3:
+                print("Creando un Quincy...")
+                #lógica Quincy
+            elif opcion == 4:
+                print("Creando un Visored (Shinigami con poderes de Hollow)...")
+                #lógica Visored
+            elif opcion == 5:
+                print("Volviendo al menú principal...")
+                return
+
+while True:
+    Menu.limpiar_pantalla()
+    Menu.imprimir_menu()
+    opcion = Menu.digitar_opcion()
+
+    if opcion == 1:
+        Menu.crear_personaje()
+        input("Presione Enter para continuar...")
+        Menu.limpiar_pantalla()
+    elif opcion == 2:
+        #Método para la opción de ver personajes creados
+        input("Presione Enter para continuar...")
+        Menu.limpiar_pantalla()
+    elif opcion == 3:
+        #Método para la opción de ver información de personaje
+        input("Presione Enter para continuar...")
+        Menu.limpiar_pantalla()
+    elif opcion == 4:
+        #Método para la opción de duelo de personajes
+        input("Presione Enter para continuar...")
+        Menu.limpiar_pantalla()
+    elif opcion == 5:
+        print("¡Hasta luego!")
+        break
